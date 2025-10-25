@@ -1,0 +1,60 @@
+{
+    // A friendly name for your development environment
+    "name": "EDA Platform Backend",
+
+    // This is the most important part. It tells VS Code to use your Docker Compose file.
+    "dockerComposeFile": [
+        "../docker-compose.yml" // Path from this file to your docker-compose.yml
+    ],
+
+    // The name of the service within your docker-compose.yml that you want to develop inside.
+    "service": "backend",
+
+    // The folder inside the container where your project code is located. VS Code will open this folder.
+    "workspaceFolder": "/app",
+
+    // 'forwardPorts' will automatically make container ports available on localhost.
+    "forwardPorts": [8000, 5432],
+
+    // --- Customizations for a better experience ---
+    "customizations": {
+        "vscode": {
+            // A list of VS Code extensions to automatically install inside the container.
+            "extensions": [
+                "ms-python.python",          // The official Python extension (IntelliSense, debugging)
+                "ms-python.pylint",          // Integrates the Pylint linter
+                "ms-python.black-formatter", // The Black code formatter
+                "ms-python.isort",           // Sorts your imports automatically
+                "batisteo.vscode-django",    // Django-specific snippets and template support
+                "ms-azuretools.vscode-docker", // Manage containers directly from VS Code
+                "mikestead.dotenv"           // Syntax highlighting for .env files
+            ],
+            // Default settings to apply inside the container.
+            "settings": {
+                // Tell the Python extension where to find the Python interpreter inside the container.
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.linting.pylintEnabled": true,
+                "python.linting.enabled": true,
+                
+                // Configure Black as the default formatter and enable format on save.
+                "editor.formatOnSave": true,
+                "editor.defaultFormatter": "ms-python.black-formatter",
+                
+                // Configure isort to run on save.
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": "explicit"
+                }
+            }
+        }
+    },
+
+    // A command to run once after the container is created for the first time.
+    // Useful for running initial database migrations.
+    "postCreateCommand": "python manage.py migrate",
+
+    // Uncomment the next line to run commands after attaching every time.
+    // "postAttachCommand": "echo 'Attached to container!'",
+
+    // Run as the root user inside the container.
+    "remoteUser": "root"
+}

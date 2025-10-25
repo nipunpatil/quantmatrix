@@ -6,4 +6,4 @@ pandas
 gunicorn 
 psycopg2-binary
 djangorestframework-simplejwt
-
+Pillow
