@@ -1,0 +1,38 @@
+# Note: The "version: '3.8'" line has been removed.
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db
+
+  redis:
+    image: redis:7
+
+  backend:
+    build: ./backend
+    command: gunicorn eda_backend.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  celery_worker:
+    build: ./backend
+
+    command: celery -A eda_backend worker -l info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+      - db
+
+volumes:
+  postgres_data:

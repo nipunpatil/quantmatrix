@@ -1,0 +1,51 @@
+# --- General ---
+# Environment variables. NEVER commit these.
+.env
+.env.*
+!.env.example
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# --- Python / Django ---
+# Byte-compiled / optimized / C extensions
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django local database file (if you ever use it for testing)
+db.sqlite3
+*.sqlite3
+
+# User-uploaded files (media) and collected static files
+# Docker volumes should handle these in production, but we ignore them locally.
+/backend/media/
+/backend/static/
+
+# Virtual environment folders
+venv/
+env/
+.venv/
+.env/
+
+# --- Frontend / Node.js ---
+# The entire node_modules directory
+/frontend/node_modules/
+
+# Build artifacts
+/frontend/build/
+/frontend/dist/
+
+# Debug log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- IDE / Editor specific files ---
+# Visual Studio Code
+.vscode/
+
+# JetBrains (PyCharm, WebStorm, etc.)
+.idea/

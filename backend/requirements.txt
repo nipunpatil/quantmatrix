@@ -1,0 +1,7 @@
+django 
+djangorestframework 
+celery
+redis
+pandas
+gunicorn 
+psycopg2-binary
