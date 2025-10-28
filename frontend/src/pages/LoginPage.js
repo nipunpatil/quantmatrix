@@ -14,7 +14,8 @@ function LoginPage() {
   const handleLogin = async () => {
     try {
       const response = await loginUser(username, password);
-      login(response.data.access);
+      // save username in auth context as well
+      login(response.data.access, username);
       toast({ title: 'Login successful!', status: 'success', duration: 3000 });
       navigate('/projects');
     } catch (error) {

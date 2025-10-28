@@ -1,17 +1,39 @@
-import React, { useContext } from 'react';
-import { Box, Flex, Heading, Button, HStack, Avatar, IconButton, Menu, MenuButton, MenuList, MenuItem, Text } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useEffect, useState } from 'react';
+import { Box, Flex, HStack, Avatar, IconButton, Menu, MenuButton, MenuList, MenuItem, Text, Image, Icon } from '@chakra-ui/react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { HamburgerIcon, BellIcon  } from '@chakra-ui/icons';
+import { HamburgerIcon } from '@chakra-ui/icons';
+import Logo from '../assests/logo.svg';
+import { getDatasetDetails } from '../api/apiClient';
 
 function AppLayout({ children }) {
-  const { logout } = useContext(AuthContext);
+  const { logout, username } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [projectName, setProjectName] = useState('');
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  useEffect(() => {
+    // when on a dashboard route like /dashboard/:datasetId fetch dataset to derive project name
+    const match = location.pathname.match(/^\/dashboard\/([^\/]+)/);
+    if (match) {
+      const datasetId = match[1];
+      getDatasetDetails(datasetId)
+        .then(res => {
+          const data = res.data || {};
+          const pName = data.project?.name || data.project_name || data.name || '';
+          setProjectName(pName);
+        })
+        .catch(() => setProjectName(''));
+    } else {
+      setProjectName('');
+    }
+  }, [location.pathname]);
 
   return (
     <Box minH="100vh" bg="gray.50">
@@ -37,50 +59,57 @@ function AppLayout({ children }) {
             variant="ghost"
             aria-label="Menu"
           />
-          <HStack spacing={2}>
-            <Box
-              bg="black"
-              color="white"
-              px={2}
-              py={1}
-              borderRadius="md"
-              fontWeight="bold"
-              fontSize="sm"
-            >
-            
-            </Box>
-            <Box>
-              <Text fontWeight="bold" fontSize="md">QUANT</Text>
-              <Text fontSize="xs" color="gray.600" mt={-1}>MATRIX AI</Text>
+          <HStack spacing={2} align="center">
+            <Box as="button" onClick={() => navigate('/projects')} aria-label="Go to my projects" cursor="pointer">
+              <Image src={Logo} alt="QuantMatrix logo" height="32px" width="auto" maxH="32px" objectFit="contain" />
             </Box>
           </HStack>
         </HStack>
 
         {/* Project Name & Icons */}
         <HStack spacing={6}>
-          <HStack spacing={2}>
-            <Box
-              w={3}
-              h={3}
-              borderRadius="full"
-              bg="blue.500"
-            />
-            <Text fontSize="sm" fontWeight="medium">Project Name</Text>
-          </HStack>
-          
+          {projectName && (
+            <HStack spacing={3} align="center">
+              <Box w={3} h={3} borderRadius="full" bg="blue.500" />
+              <Text fontSize="sm" fontWeight="medium">{projectName}</Text>
+            </HStack>
+          )}
+
+          {/* modern bell icon */}
           <IconButton
-            icon={<BellIcon />}
-            variant="ghost"
             aria-label="Notifications"
+            variant="ghost"
+            size="md"
+            ml={2}
+            icon={
+              <Icon viewBox="0 0 24 24" boxSize={6}>
+                <path fill="currentColor" d="M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6v-5a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z" />
+              </Icon>
+            }
+          />
+
+          {/* cleaner envelope (mail) icon */}
+          <IconButton
+            aria-label="Messages"
+            variant="ghost"
+            size="md"
+            ml={1}
+            icon={
+              <Icon viewBox="0 0 24 24" boxSize={6}>
+                <path fill="currentColor" d="M2.25 6.75A2.25 2.25 0 014.5 4.5h15a2.25 2.25 0 012.25 2.25v10.5A2.25 2.25 0 0119.5 19.5h-15A2.25 2.25 0 012.25 17.25V6.75zm3.03-.53L12 11.25l6.72-4.03a.75.75 0 10-.78-1.26L12 9.75 4.56 4.96a.75.75 0 10-.78 1.26z" />
+              </Icon>
+            }
           />
           
           <Menu>
             <MenuButton>
               <Avatar
                 size="sm"
-                name="User"
+                name={username || 'User'}
                 bg="orange.400"
                 cursor="pointer"
+                boxSize={9}
+                fontSize="md"
               />
             </MenuButton>
             <MenuList>
@@ -91,7 +120,7 @@ function AppLayout({ children }) {
         </HStack>
       </Flex>
 
-      =
+      
       <Box>
         {children}
       </Box>
