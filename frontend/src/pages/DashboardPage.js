@@ -4,7 +4,7 @@ import {
   Box, Container, Heading, Spinner, Alert, AlertIcon, SimpleGrid,
   Select, HStack, VStack, Text, Button, Flex, Badge
 } from '@chakra-ui/react';
-import { Bar, Line, Scatter } from 'react-chartjs-2';
+import { Bar, Line, Scatter, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,7 @@ import {
   BarElement,
   LineElement,
   PointElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -26,6 +27,7 @@ ChartJS.register(
   BarElement,
   LineElement,
   PointElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -53,22 +55,12 @@ function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeView, setActiveView] = useState('brand');
-  const [activeTab, setActiveTab] = useState(0); // 0: Trends, 1: CSF Results, 2: Scenario Planning
+  const [activeTab, setActiveTab] = useState(0);
 
   // Extended color palette
   const colorPalette = [
-    '#FFA500', // Orange
-    '#4299E1', // Blue
-    '#48BB78', // Green
-    '#9F7AEA', // Purple
-    '#ED64A6', // Pink
-    '#F6AD55', // Light Orange
-    '#4FD1C5', // Teal
-    '#FC8181', // Red
-    '#90CDF4', // Light Blue
-    '#68D391', // Light Green
-    '#B794F4', // Light Purple
-    '#F687B3', // Light Pink
+    '#FFA500', '#4299E1', '#48BB78', '#9F7AEA', '#ED64A6', '#F6AD55',
+    '#4FD1C5', '#FC8181', '#90CDF4', '#68D391', '#B794F4', '#F687B3',
   ];
 
   const fetchInitialData = useCallback(async () => {
@@ -224,6 +216,57 @@ function DashboardPage() {
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 6,
+        borderWidth: 2,
+      }]
+    };
+  };
+
+  // NEW: Market Share Doughnut Charts for Brand View
+  const getMarketShareSalesDonut = () => {
+    if (!analytics?.sales_by_brand_year) return null;
+    const brands = [...new Set(analytics.sales_by_brand_year.map(d => d.brand))];
+    
+    const filteredBrands = selectedFilters.brand 
+      ? brands.filter(b => b === selectedFilters.brand) 
+      : brands;
+    
+    const brandSales = filteredBrands.map(brand => {
+      const brandData = analytics.sales_by_brand_year.filter(d => d.brand === brand);
+      return brandData.reduce((sum, item) => sum + parseFloat(item.total_sales), 0) / 1000000;
+    });
+    
+    return {
+      labels: filteredBrands.map((b, i) => `Brand ${brands.indexOf(b) + 1}`),
+      datasets: [{
+        label: 'Sales Market Share',
+        data: brandSales,
+        backgroundColor: filteredBrands.map((b, i) => colorPalette[brands.indexOf(b) % colorPalette.length]),
+        borderColor: '#fff',
+        borderWidth: 2,
+      }]
+    };
+  };
+
+  const getMarketShareVolumeDonut = () => {
+    if (!analytics?.volume_by_brand_year) return null;
+    const brands = [...new Set(analytics.volume_by_brand_year.map(d => d.brand))];
+    
+    const filteredBrands = selectedFilters.brand 
+      ? brands.filter(b => b === selectedFilters.brand) 
+      : brands;
+    
+    const brandVolumes = filteredBrands.map(brand => {
+      const brandData = analytics.volume_by_brand_year.filter(d => d.brand === brand);
+      return brandData.reduce((sum, item) => sum + parseFloat(item.total_volume), 0) / 1000000;
+    });
+    
+    return {
+      labels: filteredBrands.map((b, i) => `Brand ${brands.indexOf(b) + 1}`),
+      datasets: [{
+        label: 'Volume Market Share',
+        data: brandVolumes,
+        backgroundColor: filteredBrands.map((b, i) => colorPalette[brands.indexOf(b) % colorPalette.length]),
+        borderColor: '#fff',
         borderWidth: 2,
       }]
     };
@@ -735,6 +778,32 @@ function DashboardPage() {
     }
   };
 
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${label}: ${value.toFixed(1)}M (${percentage}%)`;
+          }
+        }
+      }
+    },
+    cutout: '60%',
+  };
+
   if (isLoading) {
     return (
       <AppLayout>
@@ -777,7 +846,6 @@ function DashboardPage() {
           position="relative"
           boxShadow="sm"
         >
-          {/* Sliding Background */}
           <Box
             position="absolute"
             bg="white"
@@ -791,7 +859,6 @@ function DashboardPage() {
             zIndex={0}
           />
           
-          {/* Tab Buttons */}
           <Button
             variant="ghost"
             size="md"
@@ -1065,6 +1132,30 @@ function DashboardPage() {
                 )}
               </Box>
               
+              <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+                <Text fontSize="lg" fontWeight="bold" mb={4}>
+                  Market Share by Sales (Doughnut)
+                  {selectedFilters.brand && <Badge ml={2} colorScheme="orange">{selectedFilters.brand}</Badge>}
+                </Text>
+                {getMarketShareSalesDonut() && (
+                  <Box height="300px">
+                    <Doughnut data={getMarketShareSalesDonut()} options={doughnutOptions} />
+                  </Box>
+                )}
+              </Box>
+              
+              <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+                <Text fontSize="lg" fontWeight="bold" mb={4}>
+                  Market Share by Volume (Doughnut)
+                  {selectedFilters.brand && <Badge ml={2} colorScheme="orange">{selectedFilters.brand}</Badge>}
+                </Text>
+                {getMarketShareVolumeDonut() && (
+                  <Box height="300px">
+                    <Doughnut data={getMarketShareVolumeDonut()} options={doughnutOptions} />
+                  </Box>
+                )}
+              </Box>
+
               <Box bg="white" p={6} borderRadius="lg" shadow="sm">
                 <Text fontSize="lg" fontWeight="bold" mb={4}>
                   Brand Comparison by Year
