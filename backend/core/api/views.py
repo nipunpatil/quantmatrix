@@ -89,7 +89,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
         try:
             with connection.cursor() as cursor:
                 filters = {}
-                # @ done -  FIXED: All column names are lowercase
+                # @ done -  All column names are lowercase
                 filter_columns = ['brand', 'packtype', 'ppg', 'channel', 'year']
                 
                 for column in filter_columns:
